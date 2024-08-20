@@ -6,6 +6,7 @@ from shutil import copyfile
 import sys
 
 from flask import request
+from waitress import serve
 
 # from . import create_app  # --debug: ImportError: cannot import name 'create_app'
 from scrapydweb import create_app
@@ -115,8 +116,9 @@ def main():
            star=STAR, protocol=protocol, port=app.config['SCRAPYDWEB_PORT']))
     logger.info("For running Flask in production, check out http://flask.pocoo.org/docs/1.0/deploying/")
     apscheduler_logger.setLevel(logging.DEBUG)
-    app.run(host=app.config['SCRAPYDWEB_BIND'], port=app.config['SCRAPYDWEB_PORT'],
-            ssl_context=context, use_reloader=False)
+    serve(app, host=app.config['SCRAPYDWEB_BIND'], port=app.config['SCRAPYDWEB_PORT'])
+    # app.run(host=app.config['SCRAPYDWEB_BIND'], port=app.config['SCRAPYDWEB_PORT'],
+    #         ssl_context=context, use_reloader=False)
 
 
 def load_custom_settings(config):
