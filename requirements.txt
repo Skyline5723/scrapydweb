@@ -8,7 +8,6 @@ Flask-SQLAlchemy==2.4.0
 idna==2.7
 itsdangerous==2.0.0
 Jinja2==3.0.0
-logparser==0.8.2
 MarkupSafe==2.0.0
 pexpect==4.7.0
 ptyprocess==0.6.0
@@ -21,3 +20,4 @@ tzlocal==1.5.1
 w3lib==2.0.0
 Werkzeug==2.0.0
 waitress==3.0.0
+git+https://github.com/Skyline5723/logparser
