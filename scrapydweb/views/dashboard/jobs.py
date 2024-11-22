@@ -342,7 +342,10 @@ class JobsView(BaseView):
                 if job.start:
                     job.pages = self.NA if job.pages is None else job.pages  # May be 0
                     job.items = self.NA if job.items is None else job.items  # May be 0
-                    job.warnings = self.NA if job.warnings is None else job.warnings  # May be 0
+                    try:
+                        job.warnings = self.NA if job.warnings is None else job.warnings  # May be 0
+                    except Exception:
+                        job.warnings = None
                     job.errors = self.NA if job.errors is None else job.errors  # May be 0
                 else:  # Pending
                     job.pages = None  # from Running/Finished to Pending
