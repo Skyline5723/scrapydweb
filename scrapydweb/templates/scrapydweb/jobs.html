@@ -8,8 +8,12 @@
     color: #67c23a;
     font-weight: bold;
   }
-  .count_warn {
+  .count_error {
     color: red;
+    font-weight: bold;
+  }
+  .count_warn {
+    color: rgba(255, 255, 0, 0.78);
     font-weight: bold;
   }
   </style>
@@ -157,10 +161,10 @@ var Main = {
         items: {% if job.items is none %}''{% else %}'{{ job.items }}'{% endif %},
         warnings: {% if job.warnings is none %}''{% else %}'{{ job.warnings }}'{% endif %},
         errors: {% if job.errors is none %}''{% else %}'{{ job.errors }}'{% endif %},
-        pages_class: {% if job.pages == 'N/A' %}''{% elif job.pages == 0 %}'count_warn'{% else %}'count_info'{% endif %},
-        items_class: {% if job.items == 'N/A' %}''{% elif job.items == 0 %}'count_warn'{% else %}'count_info'{% endif %},
+        pages_class: {% if job.pages == 'N/A' %}''{% elif job.pages == 0 %}'count_error'{% else %}'count_info'{% endif %},
+        items_class: {% if job.items == 'N/A' %}''{% elif job.items == 0 %}'count_error'{% else %}'count_info'{% endif %},
         warnings_class: {% if job.warnings == 'N/A' %}''{% elif job.warnings == 0 %}'count_info'{% else %}'count_warn'{% endif %},
-        errors_class: {% if job.errors == 'N/A' %}''{% elif job.errors == 0 %}'count_info'{% else %}'count_warn'{% endif %},
+        errors_class: {% if job.errors == 'N/A' %}''{% elif job.errors == 0 %}'count_info'{% else %}'count_error'{% endif %},
 
         stats_class: {% if job.finish %}'state normal'{% else %}'state safe'{% endif %},
         url_stats: '{{ job.url_stats }}',
@@ -294,14 +298,14 @@ var Main = {
                     vm.tableData[idx]['pages_class'] = '';
                   } else {
                     vm.tableData[idx]['pages'] = pages;
-                    vm.tableData[idx]['pages_class'] = pages == 0 ? 'count_warn' : 'count_info';
+                    vm.tableData[idx]['pages_class'] = pages == 0 ? 'count_error' : 'count_info';
                   }
                   if (items === null) {
                     vm.tableData[idx]['items'] = 'N/A';
                     vm.tableData[idx]['items_class'] = '';
                   } else {
                     vm.tableData[idx]['items'] = items;
-                    vm.tableData[idx]['items_class'] = items == 0 ? 'count_warn' : 'count_info';
+                    vm.tableData[idx]['items_class'] = items == 0 ? 'count_error' : 'count_info';
                   }
                   if (warnings === null) {
                     vm.tableData[idx]['warnings'] = 'N/A';
@@ -315,7 +319,7 @@ var Main = {
                     vm.tableData[idx]['errors_class'] = '';
                   } else {
                     vm.tableData[idx]['errors'] = errors;
-                    vm.tableData[idx]['errors_class'] = errors == 0 ? 'count_info' : 'count_warn';
+                    vm.tableData[idx]['errors_class'] = errors == 0 ? 'count_info' : 'count_error';
                   }
 
                   // console.log(vm.tableData[idx]['job'], vm.tableData[idx]['pages'], vm.tableData[idx]['items'])
