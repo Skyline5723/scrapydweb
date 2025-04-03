@@ -218,6 +218,21 @@ class LogView(BaseView):
             self.logger.info(msg)
             flash(msg, self.INFO)
 
+    @staticmethod
+    def log_to_dict(log_text):
+        log_list = []
+        current_log = []
+        for line in log_text.strip().split('\n'):
+            if re.match(r'^(?:DEBUG|INFO|WARNING|ERROR|CRITICAL)', line):
+                if current_log:  # 如果已经有记录，保存上一条
+                    log_list.append('\n'.join(current_log))
+                current_log = [line]  # 开始新记录
+            else:
+                current_log.append(line)  # 附加到当前记录
+        if current_log:  # 保存最后一条记录
+            log_list.append('\n'.join(current_log))
+        return [{'level': log.split(' | ')[0], 'lines': log} for log in log_list]
+
     def read_local_scrapy_log(self):
         for ext in self.SCRAPYD_LOG_EXTENSIONS:
             log_path = self.log_path + ext
@@ -227,18 +242,8 @@ class LogView(BaseView):
                     break
                 with io.open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
                     log_text = f.read()
-                log_list = []
-                current_log = []
-                for line in log_text.strip().split('\n'):
-                    if re.match(r'^(?:DEBUG|INFO|WARNING|ERROR|CRITICAL)', line):
-                        if current_log:  # 如果已经有记录，保存上一条
-                            log_list.append('\n'.join(current_log))
-                        current_log = [line]  # 开始新记录
-                    else:
-                        current_log.append(line)  # 附加到当前记录
-                if current_log:  # 保存最后一条记录
-                    log_list.append('\n'.join(current_log))
-                self.text = [{'level': log.split(' | ')[0], 'lines': log} for log in log_list]
+
+                self.text = self.log_to_dict(log_text)
 
                 log_path = self.handle_slash(log_path)
                 msg = "Using local logfile: %s" % log_path
@@ -249,7 +254,8 @@ class LogView(BaseView):
     def request_scrapy_log(self):
         for ext in self.SCRAPYD_LOG_EXTENSIONS:
             url = self.url + ext
-            self.status_code, self.text = self.make_request(url, auth=self.AUTH, as_json=False)
+            self.status_code, log_text = self.make_request(url, auth=self.AUTH, as_json=False)
+            self.text = self.log_to_dict(log_text)
             if self.status_code == 200:
                 self.url = url
                 self.logger.debug("Got logfile from %s", self.url)
