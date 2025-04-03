@@ -261,6 +261,8 @@ class JobsView(BaseView):
                         record.deleted = NOT_DELETED
                         record.pages = None
                         record.items = None
+                        record.warnings = None
+                        record.errors = None
                         self.logger.info("Recover deleted job: %s", record)
                         flash("Recover deleted job: %s" % job, self.WARN)
             else:
@@ -283,11 +285,16 @@ class JobsView(BaseView):
             if not job['start']:
                 record.pages = None
                 record.items = None
+                record.warnings = None
+                record.errors = None
             elif self.liststats_datas:
                 try:
                     data = self.liststats_datas[job['project']][job['spider']][job['job']]
                     record.pages = data['pages']  # Logparser: None or non-negative int
                     record.items = data['items']  # Logparser: None or non-negative int
+                    record.warnings = data['log_categories']['warning_logs']['count']
+                    record.errors = data['log_categories']['critical_logs']['count'] + \
+                                    data['log_categories']['error_logs']['count']
                 except KeyError:
                     pass
                 except Exception as err:
@@ -337,9 +344,19 @@ class JobsView(BaseView):
                 if job.start:
                     job.pages = self.NA if job.pages is None else job.pages  # May be 0
                     job.items = self.NA if job.items is None else job.items  # May be 0
+                    try:
+                        job.warnings = self.NA if job.warnings is None else job.warnings  # May be 0
+                    except Exception:
+                        job.warnings = None
+                    try:
+                        job.errors = self.NA if job.errors is None else job.errors  # May be 0
+                    except Exception:
+                        job.errors = None
                 else:  # Pending
                     job.pages = None  # from Running/Finished to Pending
                     job.items = None
+                    job.warnings = None
+                    job.errors = None
                     continue
                 job_finished = 'True' if job.finish else None
                 job.url_utf8 = url_for('log', node=self.node, opt='utf8', project=job.project, ui=self.UI,

@@ -74,7 +74,6 @@
   <table>
     <thead>
       <tr>
-        <th>Project</th>
         <th>Spider</th>
         {% if SHOW_JOBS_JOB_COLUMN %}
         <th>Job</th>
@@ -85,12 +84,9 @@
         <th>Runtime</th>
         <th>Pages</th>
         <th>Items</th>
+        <th>Warns</th>
+        <th>Errors</th>
         <th>Stats</th>
-        <th>Log</th>
-        {% if SHOW_SCRAPYD_ITEMS and running_jobs and (running_jobs[0]['url_items'] or running_jobs[-1]['url_items']) %}
-        <th>Items</th>
-        {% endif %}
-
         <th>Action</th>
         <th>Forcestop</th>
       </tr>
@@ -98,7 +94,6 @@
     <tbody>
     {% for job in running_jobs %}
       <tr>
-        <td>{{ job['project'] }}</td>
         <td>{{ job['spider'] }}</td>
         {% if SHOW_JOBS_JOB_COLUMN %}
         <td>{{ job['job'] }}</td>
@@ -109,18 +104,12 @@
         <td>{{ job['runtime'] }}</td>
         <td id="running{{ loop.index }}pages">N/A</td>
         <td id="running{{ loop.index }}items">N/A</td>
+        <td id="running{{ loop.index }}warns">N/A</td>
+        <td id="running{{ loop.index }}erorrs">N/A</td>
         <td>
-          {% if SCRAPYD_SERVERS_AMOUNT > 1 %}
-          <a class="state multinode" href="{{ job['url_clusterreports'] }}">
-            {{ g.multinode|safe }}
-          </a>
-          {% endif %}
           <a class="state normal" target="_blank" href="{{ job['url_stats'] }}">Stats</a>
+          <a class="state normal" target="_blank" href="{{ job['url_utf8'] }}">Log</a>
         </td>
-        <td><a class="state normal" target="_blank" href="{{ job['url_utf8'] }}">Log</a></td>
-        {% if SHOW_SCRAPYD_ITEMS and job['url_items'] %}
-        <td><a class="state normal" target="_blank" href="{{ job['url_items'] }}">Items</a></td>
-        {% endif %}
         <td id="running_stop_{{ loop.index }}">
           {% if SCRAPYD_SERVERS_AMOUNT > 1 %}
           <a class="state multinode" href="{{ job['url_multinode_stop'] }}">
@@ -144,7 +133,6 @@
   <table>
     <thead>
       <tr>
-        <th>Project</th>
         <th>Spider</th>
         {% if SHOW_JOBS_JOB_COLUMN %}
         <th>Job</th>
@@ -155,19 +143,15 @@
         <th>Finish</th>
         <th>Pages</th>
         <th>Items</th>
+        <th>Warns</th>
+        <th>Errors</th>
         <th>Stats</th>
-        <th>Log</th>
-        {% if SHOW_SCRAPYD_ITEMS and finished_jobs and (finished_jobs[0]['url_items'] or finished_jobs[-1]['url_items']) %}
-        <th>Items</th>
-        {% endif %}
-
         <th>Action</th>
       </tr>
     </thead>
     <tbody>
     {% for job in finished_jobs %}
       <tr>
-        <td>{{ job['project'] }}</td>
         <td>{{ job['spider'] }}</td>
         {% if SHOW_JOBS_JOB_COLUMN %}
         <td>{{ job['job'] }}</td>
@@ -178,18 +162,12 @@
         <td>{{ job['finish'] }}</td>
         <td id="finished{{ loop.index }}pages">N/A</td>
         <td id="finished{{ loop.index }}items">N/A</td>
+        <td id="finished{{ loop.index }}warns">N/A</td>
+        <td id="finished{{ loop.index }}errors">N/A</td>
         <td>
-          {% if SCRAPYD_SERVERS_AMOUNT > 1 %}
-          <a class="state multinode" href="{{ job['url_clusterreports'] }}">
-            {{ g.multinode|safe }}
-          </a>
-          {% endif %}
           <a class="state normal" target="_blank" href="{{ job['url_stats'] }}">Stats</a>
+          <a class="state normal" target="_blank" href="{{ job['url_utf8'] }}">Log</a>
         </td>
-        <td><a class="state normal" target="_blank" href="{{ job['url_utf8'] }}">Log</a></td>
-        {% if SHOW_SCRAPYD_ITEMS and job['url_items'] %}
-        <td><a class="state normal" target="_blank" href="{{ job['url_items'] }}">Items</a></td>
-        {% endif %}
         <td>
           {% if SCRAPYD_SERVERS_AMOUNT > 1 %}
           <a class="state multinode" href="{{ job['url_multinode_run'] }}">
@@ -243,13 +221,17 @@ window.onload = function() {
             for (var key in jobs) {
               try {
                 var job = jobs[key];  // dict object
-                for (var idx in ['pages', 'items']) {
-                  var kind = ['pages', 'items'][idx];
+                for (var idx in ['pages', 'items', 'warnings', 'errors']) {
+                  var kind = ['pages', 'items', 'warnings', 'errors'][idx];
                   var count = obj.datas[job.project][job.spider][job.job][kind];
                   var element = my$('#' + key + kind);
                   if (count !== null) {
+                    if (kind == 'pages' || kind == 'items') {
+                      element.style.color = count == 0 ? 'red' : '#67c23a';
+                    } else {
+                      element.style.color = count == 0 ? '#67c23a' : 'red';
+                    }
                     element.style.fontWeight = 'bold';
-                    element.style.color = count == 0 ? 'red' : '#67c23a';
                     element.innerHTML = count;
                   }
                   console.log(kind + " of jobid " + job.job + ": " + count);

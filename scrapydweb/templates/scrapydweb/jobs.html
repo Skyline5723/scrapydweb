@@ -8,8 +8,12 @@
     color: #67c23a;
     font-weight: bold;
   }
-  .count_warn {
+  .count_error {
     color: red;
+    font-weight: bold;
+  }
+  .count_warn {
+    color: rgba(255, 255, 0, 0.78);
     font-weight: bold;
   }
   </style>
@@ -59,14 +63,9 @@
     <!-- :default-sort="{prop: 'runtime', order: 'descending'}" -->
 
     <el-table-column prop="index" label="Index" fixed sortable align="center" width="70"></el-table-column>
-    <!-- 'abcdefghi0abcdefghi0' -->
-    <el-table-column prop="project" label="Project" fixed sortable show-overflow-tooltip align="center" width="150">
-      <template slot-scope="scope"><span :style="{ color: scope.row.pending_color }">{{scope.row.project}}</span></template>
-    </el-table-column>
     <el-table-column prop="spider" label="Spider" fixed sortable show-overflow-tooltip align="center" width="150">
       <template slot-scope="scope"><span :style="{ color: scope.row.pending_color }">{{scope.row.spider}}</span></template>
     </el-table-column>
-    <!-- 'task_123456_2019-01-01T00_00_01' -->
     <el-table-column prop="job" label="Job" fixed sortable show-overflow-tooltip :sort-method="sortJobWithTask" :sort-orders="sortOrders" align="center" width="215">
       <template slot-scope="scope"><span :style="{ color: scope.row.pending_color }">{{scope.row.job}}</span></template>
     </el-table-column>
@@ -77,12 +76,19 @@
       <template slot-scope="scope"><span :class="scope.row.items_class">{{scope.row.items}}</span></template>
     </el-table-column>
 
-    <el-table-column prop="stats" label="Stats" sortable align="center" width="{% if SCRAPYD_SERVERS_AMOUNT > 1 %}105{% else %}65{% endif %}" :sort-method="sortByIndex">
+    <el-table-column prop="warnings" label="Warns" fixed sortable :sort-method="sortWarnings" :sort-orders="sortOrders" align="center" width="80">
+       <template slot-scope="scope"><span :class="scope.row.warnings_class">{{scope.row.warnings}}</span></template>
+     </el-table-column>
+     <el-table-column prop="errors" label="Errors" fixed sortable :sort-method="sortErrors" :sort-orders="sortOrders" align="center" width="80">
+       <template slot-scope="scope"><span :class="scope.row.errors_class">{{scope.row.errors}}</span></template>
+     </el-table-column>
+     <el-table-column prop="start" label="Start" sortable :sort-method="sortStart" :sort-orders="sortOrders" align="center" width="145"></el-table-column>
+     <el-table-column prop="runtime" label="Runtime" sortable :sort-method="sortRuntime" :sort-orders="sortOrders" align="center" width="125"></el-table-column>
+     <el-table-column prop="finish" label="Finish" sortable :sort-orders="sortOrders" align="center" width="145"></el-table-column>
+     <el-table-column prop="stats" label="Stats" sortable align="center" width="115" :sort-method="sortByIndex">
       <template slot-scope="scope">
-        {% if SCRAPYD_SERVERS_AMOUNT > 1 %}
-        <a class="state multinode" :style="{ display: scope.row.pending_display }" :href="scope.row.url_clusterreports">{{ g.multinode|safe }}</a>
-        {% endif %}
         <a :class="scope.row.stats_class" :style="{ display: scope.row.pending_display }" :href="scope.row.url_stats" target="_blank">Stats</a>
+        <a :class="scope.row.stats_class" :style="{ display: scope.row.pending_display }" :href="scope.row.url_utf8" target="_blank">Log</a>
       </template>
     </el-table-column>
 
@@ -96,22 +102,6 @@
       </template>
     </el-table-column>
 
-    <el-table-column prop="start" label="Start" sortable :sort-method="sortStart" :sort-orders="sortOrders" align="center" width="145"></el-table-column>
-    <!-- 16 days, 20:09:24 -->
-    <el-table-column prop="runtime" label="Runtime" sortable :sort-method="sortRuntime" :sort-orders="sortOrders" align="center" width="125"></el-table-column>
-    <el-table-column prop="finish" label="Finish" sortable :sort-orders="sortOrders" align="center" width="145"></el-table-column>
-    <el-table-column prop="update_time" label="Update time" sortable :sort-orders="sortOrders" align="center" width="145"></el-table-column>
-    <el-table-column prop="pid" label="PID" sortable :sort-method="sortPID" :sort-orders="sortOrders" align="center" width="70">
-      <template slot-scope="scope"><span :style="{ color: scope.row.pid_color }">{{scope.row.pid}}</span></template>
-    </el-table-column>
-
-    <el-table-column prop="links" label="Links" sortable align="center" width="195" :sort-method="sortByIndex">
-      <template slot-scope="scope">
-        <a :class="scope.row.stats_class" :style="{ display: scope.row.pending_display }" :href="scope.row.url_utf8" target="_blank">Log</a>
-        <a :class="scope.row.stats_class" :style="{ display: scope.row.pending_display }" :href="scope.row.url_source" target="_blank">Source</a>
-        <a :class="scope.row.stats_class" :style="{ display: scope.row.items_display }" :href="scope.row.url_items" target="_blank">Items</a>
-      </template>
-    </el-table-column>
     <el-table-column prop="delete" label="Delete" sortable align="center" width="90" :sort-method="sortByIndex">
       <!-- <template slot-scope="scope"><a class="state danger" :href="scope.row.url_delete" target="_blank">Delete</a></template> -->
       <template slot-scope="scope"><a class="state delete" @click="deleteRow(scope.$index, tableData)">Delete</a></template>
@@ -176,8 +166,12 @@ var Main = {
         to_be_killed: {% if job.to_be_killed %}true{% else %}false{% endif %},
         pages: {% if job.pages is none %}''{% else %}'{{ job.pages }}'{% endif %},
         items: {% if job.items is none %}''{% else %}'{{ job.items }}'{% endif %},
-        pages_class: {% if job.pages == 'N/A' %}''{% elif job.pages == 0 %}'count_warn'{% else %}'count_info'{% endif %},
-        items_class: {% if job.items == 'N/A' %}''{% elif job.items == 0 %}'count_warn'{% else %}'count_info'{% endif %},
+        warnings: {% if job.warnings is none %}''{% else %}'{{ job.warnings }}'{% endif %},
+        errors: {% if job.errors is none %}''{% else %}'{{ job.errors }}'{% endif %},
+        pages_class: {% if job.pages == 'N/A' %}''{% elif job.pages == 0 %}'count_error'{% else %}'count_info'{% endif %},
+         items_class: {% if job.items == 'N/A' %}''{% elif job.items == 0 %}'count_error'{% else %}'count_info'{% endif %},
+        warnings_class: {% if job.warnings == 'N/A' %}''{% elif job.warnings == 0 %}'count_info'{% else %}'count_warn'{% endif %},
+        errors_class: {% if job.errors == 'N/A' %}''{% elif job.errors == 0 %}'count_info'{% else %}'count_error'{% endif %},
 
         stats_class: {% if job.finish %}'state normal'{% else %}'state safe'{% endif %},
         url_stats: '{{ job.url_stats }}',
@@ -253,6 +247,16 @@ var Main = {
       var b_items = b.items == 'N/A' ? -1 : parseInt(b.items);
       return a_items > b_items ? 1 : -1;
     },
+     sortWarnings(a, b) {
+       var a_warnings = a.warnings == 'N/A' ? -1 : parseInt(a.warnings);
+       var b_warnings = b.warnings == 'N/A' ? -1 : parseInt(b.warnings);
+       return a_warnings > b_warnings ? 1 : -1;
+     },
+     sortErrors(a, b) {
+       var a_errors = a.errors == 'N/A' ? -1 : parseInt(a.errors);
+       var b_errors = b.errors == 'N/A' ? -1 : parseInt(b.errors);
+       return a_errors > b_errors ? 1 : -1;
+     },
     sortByIndex(a, b) {
       return a.index < b.index ? -1 : 1;
     },
@@ -292,14 +296,16 @@ var Main = {
                   var spider = vm.tableData[idx]['spider'];
                   var job = vm.tableData[idx]['job'];
                   var pages = obj.datas[project][spider][job]['pages'];
-                  var items = obj.datas[project][spider][job]['items']
+                  var items = obj.datas[project][spider][job]['items'];
+                  var warnings = obj.datas[project][spider][job]['warnings'];
+                  var errors = obj.datas[project][spider][job]['errors'];
 
                   if (pages === null) {
                     vm.tableData[idx]['pages'] = 'N/A';
                     vm.tableData[idx]['pages_class'] = '';
                   } else {
                     vm.tableData[idx]['pages'] = pages;
-                    vm.tableData[idx]['pages_class'] = pages == 0 ? 'count_warn' : 'count_info';
+                    vm.tableData[idx]['pages_class'] = pages == 0 ? 'count_error' : 'count_info';
                   }
 
                   if (items === null) {
@@ -307,9 +313,22 @@ var Main = {
                     vm.tableData[idx]['items_class'] = '';
                   } else {
                     vm.tableData[idx]['items'] = items;
-                    vm.tableData[idx]['items_class'] = items == 0 ? 'count_warn' : 'count_info';
+                    vm.tableData[idx]['items_class'] = items == 0 ? 'count_error' : 'count_info';
                   }
-
+                  if (warnings === null) {
+                    vm.tableData[idx]['warnings'] = 'N/A';
+                    vm.tableData[idx]['warnings_class'] = '';
+                  } else {
+                    vm.tableData[idx]['warnings'] = warnings;
+                    vm.tableData[idx]['warnings_class'] = warnings == 0 ? 'count_info' : 'count_warn';
+                  }
+                  if (errors === null) {
+                    vm.tableData[idx]['errors'] = 'N/A';
+                    vm.tableData[idx]['errors_class'] = '';
+                  } else {
+                    vm.tableData[idx]['errors'] = errors;
+                    vm.tableData[idx]['errors_class'] = errors == 0 ? 'count_info' : 'count_error';
+                  }
                   // console.log(vm.tableData[idx]['job'], vm.tableData[idx]['pages'], vm.tableData[idx]['items'])
                 } catch(err) {
                   // console.log(err);
