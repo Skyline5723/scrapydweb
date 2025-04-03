@@ -71,6 +71,7 @@ class LogView(BaseView):
 
         self.status_code = 0
         self.text = ''
+        self.log_level_lines = []
         if self.opt == 'report':
             self.template = None
         else:
@@ -241,9 +242,9 @@ class LogView(BaseView):
                     self.logger.debug("Ignore local tarfile and use requests instead: %s", log_path)
                     break
                 with io.open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    log_text = f.read()
+                    self.text = f.read()
 
-                self.text = self.log_to_dict(log_text)
+                self.log_level_lines = self.log_to_dict(self.text)
 
                 log_path = self.handle_slash(log_path)
                 msg = "Using local logfile: %s" % log_path
@@ -254,8 +255,8 @@ class LogView(BaseView):
     def request_scrapy_log(self):
         for ext in self.SCRAPYD_LOG_EXTENSIONS:
             url = self.url + ext
-            self.status_code, log_text = self.make_request(url, auth=self.AUTH, as_json=False)
-            self.text = self.log_to_dict(log_text)
+            self.status_code, self.text = self.make_request(url, auth=self.AUTH, as_json=False)
+            self.log_level_lines = self.log_to_dict(self.text)
             if self.status_code == 200:
                 self.url = url
                 self.logger.debug("Got logfile from %s", self.url)
@@ -365,6 +366,7 @@ class LogView(BaseView):
         return odict
 
     def update_kwargs(self):
+        self.kwargs['log_level_lines'] = self.log_level_lines
         if self.utf8_realtime:
             self.kwargs['text'] = self.text
             self.kwargs['last_update_timestamp'] = time.time()

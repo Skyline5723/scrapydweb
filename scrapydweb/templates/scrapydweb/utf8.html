@@ -163,7 +163,7 @@
         </select>
     </div>
     <div id="log">
-        {% for log in text %}
+        {% for log in log_level_lines %}
             <pre class="log-line {{ log.level }}">{{ log.lines }}</pre>
         {% endfor %}
     </div>
