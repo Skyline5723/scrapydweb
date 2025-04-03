@@ -11,25 +11,91 @@
     </style>
     <link rel="stylesheet" type="text/css" href="{{ static_css_utf8 }}">
     <style>
+        /* 日志行样式 */
         .log-line {
             margin: 0;
             padding: 5px;
+            font-family: monospace;
         }
 
         .INFO {
-            color: green;
+            color: #2ecc71;
         }
 
+        /* 绿色 */
         .WARNING {
-            color: orange;
+            color: #f1c40f;
         }
 
+        /* 黄色 */
         .ERROR {
-            color: red;
+            color: #e74c3c;
         }
 
+        /* 红色 */
         .UNKNOWN {
-            color: black;
+            color: #7f8c8d;
+        }
+
+        /* 灰色 */
+
+        /* 优化后的 select 样式 */
+        .log-filter {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-filter label {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        #log-level {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #log-level:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        #log-level:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+        }
+
+        #log-level option {
+            padding: 5px;
+        }
+
+        /* 为选项添加颜色（仅部分浏览器支持） */
+        #log-level option[value="INFO"] {
+            color: #2ecc71;
+        }
+
+        #log-level option[value="WARNING"] {
+            color: #f1c40f;
+        }
+
+        #log-level option[value="ERROR"] {
+            color: #e74c3c;
+        }
+
+        #log-level option[value="UNKNOWN"] {
+            color: #7f8c8d;
         }
     </style>
     <script>
@@ -86,8 +152,8 @@
     </div>
 
 
-    <div>
-        <label for="log-level">按等级筛选：</label>
+    <div class="log-filter">
+        <label for="log-level">按日志等级筛选：</label>
         <select id="log-level" onchange="filterLogs()">
             <option value="ALL">全部</option>
             <option value="INFO">信息</option>
