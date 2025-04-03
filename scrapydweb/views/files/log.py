@@ -226,7 +226,20 @@ class LogView(BaseView):
                     self.logger.debug("Ignore local tarfile and use requests instead: %s", log_path)
                     break
                 with io.open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    self.text = f.read()
+                    log_text = f.read()
+                log_list = []
+                current_log = []
+                for line in log_text.strip().split('\n'):
+                    if re.match(r'^(?:DEBUG|INFO|WARNING|ERROR|CRITICAL)', line):
+                        if current_log:  # 如果已经有记录，保存上一条
+                            log_list.append('\n'.join(current_log))
+                        current_log = [line]  # 开始新记录
+                    else:
+                        current_log.append(line)  # 附加到当前记录
+                if current_log:  # 保存最后一条记录
+                    log_list.append('\n'.join(current_log))
+                self.text = [{'level': log.split(' | ')[0], 'lines': log} for log in log_list]
+
                 log_path = self.handle_slash(log_path)
                 msg = "Using local logfile: %s" % log_path
                 self.logger.debug(msg)

@@ -3,106 +3,158 @@
 {% block title %}log{% endblock %}
 
 {% block head %}
-  <style>
-    /* See stats.css */
-    #content pre {white-space: pre-wrap;}
-  </style>
-  <link rel="stylesheet" type="text/css" href="{{ static_css_utf8 }}">
+    <style>
+        /* See stats.css */
+        #content pre {
+            white-space: pre-wrap;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="{{ static_css_utf8 }}">
+    <style>
+        .log-line {
+            margin: 0;
+            padding: 5px;
+        }
+
+        .INFO {
+            color: green;
+        }
+
+        .WARNING {
+            color: orange;
+        }
+
+        .ERROR {
+            color: red;
+        }
+
+        .UNKNOWN {
+            color: black;
+        }
+    </style>
+    <script>
+        function filterLogs() {
+            var select = document.getElementById('log-level');
+            var level = select.value;
+            var lines = document.querySelectorAll('.log-line');
+            lines.forEach(function (line) {
+                if (level === 'ALL' || line.classList.contains(level)) {
+                    line.style.display = 'block';
+                } else {
+                    line.style.display = 'none';
+                }
+            });
+        }
+    </script>
 {% endblock %}
 
 {% block loader %}
-<div class="loader" style="display: block;" onclick="hideLoader();"></div>
+    <div class="loader" style="display: block;" onclick="hideLoader();"></div>
 {% endblock %}
 
 
 {% block body %}
-<div class="go-top">
-  <div class="arrow"></div>
-  <div class="stick"></div>
-</div>
-<div class="go-bottom">
-  <div class="arrow"></div>
-  <div class="stick"></div>
-</div>
+    <div class="go-top">
+        <div class="arrow"></div>
+        <div class="stick"></div>
+    </div>
+    <div class="go-bottom">
+        <div class="arrow"></div>
+        <div class="stick"></div>
+    </div>
 
-<h3>PROJECT ({{ project }}), SPIDER ({{ spider }})</h3>
+    <h3>PROJECT ({{ project }}), SPIDER ({{ spider }})</h3>
 
-<div class="wrap collapse-wrap">
-  <!-- <h3>INFO</h3> -->
-  <ul class="collapse">
-    <li>
-      <div class="title">
-        <h4>Stats</h4>
-        <i class="iconfont icon-right"></i>
-      </div>
-      <p><a class="link" href="{{ url_opt_opposite }}" target="_blank">{{ url_opt_opposite }}</a></p>
-    </li>
-    <li>
-      <div class="title">
-        <h4>Source</h4>
-        <i class="iconfont icon-right"></i>
-      </div>
-      <p><a class="link" href="{{ url_source }}" target="_blank">{{ url_source }}</a></p>
-    </li>
-  </ul>
-</div>
-
-
-<div id="log">
-  <pre>{{ text }}</pre>
-</div>
-<h3>PROJECT ({{ project }}), SPIDER ({{ spider }})</h3>
-{% if url_refresh %}
-<a id="refresh_button" class="button danger" href="{{ url_refresh }}" onclick="showLoader();">Click to refresh</a>
-{% endif %}
+    <div class="wrap collapse-wrap">
+        <!-- <h3>INFO</h3> -->
+        <ul class="collapse">
+            <li>
+                <div class="title">
+                    <h4>Stats</h4>
+                    <i class="iconfont icon-right"></i>
+                </div>
+                <p><a class="link" href="{{ url_opt_opposite }}" target="_blank">{{ url_opt_opposite }}</a></p>
+            </li>
+            <li>
+                <div class="title">
+                    <h4>Source</h4>
+                    <i class="iconfont icon-right"></i>
+                </div>
+                <p><a class="link" href="{{ url_source }}" target="_blank">{{ url_source }}</a></p>
+            </li>
+        </ul>
+    </div>
 
 
-<script>
-$(function() {
-  //$(window).scroll(function() {
-  $(document).ready(function() {
-    hideLoader();
+    <div>
+        <label for="log-level">按等级筛选：</label>
+        <select id="log-level" onchange="filterLogs()">
+            <option value="ALL">全部</option>
+            <option value="INFO">信息</option>
+            <option value="WARNING">警告</option>
+            <option value="ERROR">错误</option>
+            <option value="UNKNOWN">未知</option>
+        </select>
+    </div>
+    <div id="log">
+        {% for log in text %}
+            <pre class="log-line {{ log.level }}">{{ log.lines }}</pre>
+        {% endfor %}
+    </div>
 
-    $('div.go-top').show();
-    $('div.go-bottom').show();
-    goLogBottom();
-  });
-
-  $('div.go-top').click(function() {
-    goContentTop();
-  });
-  $('div.go-bottom').click(function() {
-    goLogBottom();
-  });
-});
-</script>
-
-
-<script>
-const LAST_UPDATE_TIMESTAMP = {{ last_update_timestamp }};
-
-{% if url_refresh %}
-setInterval(function() {
-  var now_timestamp = Date.now() / 1000;
-  var seconds = Math.ceil(now_timestamp - LAST_UPDATE_TIMESTAMP);
-  my$('#refresh_button').innerHTML = "Loaded <span style='color: black;'>" + seconds + "</span> secs ago, click to hard reload (SLOW)";
-}, 1000);
-{% endif %}
-</script>
+    <h3>PROJECT ({{ project }}), SPIDER ({{ spider }})</h3>
+    {% if url_refresh %}
+        <a id="refresh_button" class="button danger" href="{{ url_refresh }}" onclick="showLoader();">Click to
+            refresh</a>
+    {% endif %}
 
 
-<script>
-// handle collapse components
-(function () {
-  var collapse = my$('.collapse');
-  var titles = my$$('.collapse .title');
-  var lis = my$$('.collapse li');
-  titles.forEach(function(title) {
-    title.addEventListener('click', function(e){
-      var index = [].indexOf.call(titles, this);
-      lis[index].classList.toggle('active');
-    });
-  });
-})();
-</script>
+    <script>
+        $(function () {
+            //$(window).scroll(function() {
+            $(document).ready(function () {
+                hideLoader();
+
+                $('div.go-top').show();
+                $('div.go-bottom').show();
+                goLogBottom();
+            });
+
+            $('div.go-top').click(function () {
+                goContentTop();
+            });
+            $('div.go-bottom').click(function () {
+                goLogBottom();
+            });
+        });
+    </script>
+
+
+    <script>
+        const LAST_UPDATE_TIMESTAMP = {{ last_update_timestamp }};
+
+        {% if url_refresh %}
+            setInterval(function () {
+                var now_timestamp = Date.now() / 1000;
+                var seconds = Math.ceil(now_timestamp - LAST_UPDATE_TIMESTAMP);
+                my$('#refresh_button').innerHTML = "Loaded <span style='color: black;'>" + seconds + "</span> secs ago, click to hard reload (SLOW)";
+            }, 1000);
+        {% endif %}
+    </script>
+
+
+    <script>
+        // handle collapse components
+        (function () {
+            var collapse = my$('.collapse');
+            var titles = my$$('.collapse .title');
+            var lis = my$$('.collapse li');
+            titles.forEach(function (title) {
+                title.addEventListener('click', function (e) {
+                    var index = [].indexOf.call(titles, this);
+                    lis[index].classList.toggle('active');
+                });
+            });
+        })();
+    </script>
 {% endblock %}
