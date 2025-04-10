@@ -24,7 +24,7 @@
 
         /* 绿色 */
         .WARNING {
-            color: #f1c40f;
+            color: #ac8612;
         }
 
         /* 黄色 */
@@ -87,7 +87,7 @@
         }
 
         #log-level option[value="WARNING"] {
-            color: #f1c40f;
+            color: #ac8612;
         }
 
         #log-level option[value="ERROR"] {
@@ -96,6 +96,15 @@
 
         #log-level option[value="UNKNOWN"] {
             color: #7f8c8d;
+        }
+
+        .restrict-text-width {
+            max-width: 100%; /* 跟随父容器宽度 */
+        }
+
+        .restrict-text-width * {
+            max-width: 100%; /* 限制子孙节点不超过父容器 */
+            word-wrap: break-word; /* 超出时断词换行 */
         }
     </style>
     <script>
@@ -162,7 +171,7 @@
             <option value="UNKNOWN">未知</option>
         </select>
     </div>
-    <div id="log">
+    <div id="log" class="restrict-text-width">
         {% for log in log_level_lines %}
             <pre class="log-line {{ log.level }}">{{ log.lines }}</pre>
         {% endfor %}
